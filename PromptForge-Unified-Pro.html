@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>PromptForge Unified Pro</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="theme-color" content="#1a1b23">
+  <style>
+    :root {
+      --bg: #1a1b23; --surface: #21232b; --surface2: #282a33; --border: #33354a;
+      --text: #e1e2e8; --text2: #a8a9b7; --accent: #6c8cff; --accent2: #4ef0c8;
+      --danger: #ff5e7a; --warn: #ffb347; --success: #4ade80; --radius: 8px;
+      --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --shadow: 0 2px 12px rgba(0,0,0,0.35); --transition: 0.2s ease;
+    }
+    .light-theme {
+      --bg: #f5f6f8; --surface: #ffffff; --surface2: #eef0f4; --border: #d5d7e0;
+      --text: #1a1b23; --text2: #5a5b6e; --accent: #4a6cf7; --accent2: #0ea882;
+      --danger: #e0455e; --warn: #d98c20; --success: #2ca85e; --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--font-sans); line-height:1.5; transition: background var(--transition), color var(--transition); min-height:100vh; }
+    header { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); }
+    header h1 { font-size:1.3rem; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; white-space:nowrap; }
+    .theme-toggle { margin-left:auto; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:6px 14px; border-radius:20px; cursor:pointer; font-size:0.85rem; transition:all var(--transition); }
+    .theme-toggle:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .nav-desktop { display:flex; flex-wrap:wrap; gap:2px; background:var(--surface); border-bottom:1px solid var(--border); padding:6px 12px; position:sticky; top:54px; z-index:99; overflow-x:auto; }
+    .nav-mobile { display:none; background:var(--surface); border-bottom:1px solid var(--border); padding:8px 12px; position:sticky; top:54px; z-index:99; }
+    @media (max-width:700px) { .nav-desktop { display:none; } .nav-mobile { display:block; } }
+    .tab-btn { background:transparent; border:none; color:var(--text2); padding:8px 14px; cursor:pointer; border-radius:var(--radius); font-size:0.82rem; white-space:nowrap; transition:all var(--transition); font-family:var(--font-sans); }
+    .tab-btn:hover { background:var(--surface2); color:var(--text); }
+    .tab-btn.active { background:var(--accent); color:#fff; font-weight:600; }
+    main { max-width:1300px; margin:0 auto; padding:20px; }
+    .tab-content { display:none; animation:fadeIn 0.25s ease; }
+    .tab-content.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; box-shadow:var(--shadow); }
+    h3 { color:var(--accent); margin-bottom:10px; font-size:1rem; }
+    label { display:block; font-size:0.82rem; color:var(--text2); margin-bottom:3px; font-weight:500; }
+    input,textarea,select { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:var(--radius); font-family:var(--font-sans); font-size:0.88rem; transition:border var(--transition); }
+    textarea { font-family:var(--font-mono); font-size:0.8rem; min-height:70px; }
+    input:focus,textarea:focus,select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(108,140,255,0.15); }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius); border:1px solid var(--border); cursor:pointer; font-size:0.85rem; font-weight:500; background:var(--surface2); color:var(--text); white-space:nowrap; transition:all var(--transition); }
+    .btn:hover { filter:brightness(1.2); border-color:var(--accent); }
+    .btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btn.success { background:var(--success); color:#000; border-color:var(--success); }
+    .btn.danger { background:var(--danger); color:#fff; border-color:var(--danger); }
+    .btn:disabled { opacity:0.5; pointer-events:none; }
+    .chip { display:inline-block; padding:4px 10px; border-radius:14px; font-size:0.75rem; background:var(--surface2); border:1px solid var(--border); margin:2px; cursor:pointer; transition:all var(--transition); user-select:none; }
+    .chip.checked { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .chip:focus-visible { outline:2px solid var(--accent); }
+    .preview-box { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:14px; font-family:var(--font-mono); font-size:0.78rem; white-space:pre-wrap; max-height:400px; overflow-y:auto; }
+    .inline-msg { padding:8px 14px; border-radius:var(--radius); font-size:0.82rem; margin-top:6px; display:none; }
+    .inline-msg.show { display:block; }
+    .inline-msg.info { background:rgba(108,140,255,0.12); border:1px solid var(--accent); color:var(--accent); }
+    .inline-msg.ok { background:rgba(74,222,128,0.12); border:1px solid var(--success); color:var(--success); }
+    .inline-msg.err { background:rgba(255,94,122,0.12); border:1px solid var(--danger); color:var(--danger); }
+    .progress-bar { height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; margin:6px 0; }
+    .progress-fill { height:100%; background:var(--accent); border-radius:4px; width:0%; transition:width 0.4s ease; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media (max-width:800px) { .grid-2,.grid-3 { grid-template-columns:1fr; } .row { flex-direction:column; } }
+    .mindmap-svg { width:100%; height:500px; }
+    .metric-card { text-align:center; padding:12px; background:var(--surface2); border-radius:var(--radius); }
+    .metric-card .val { font-size:1.8rem; font-weight:700; color:var(--accent); }
+    .metric-card .lbl { font-size:0.72rem; color:var(--text2); }
+    .card-prompt { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:12px; cursor:pointer; transition:all var(--transition); }
+    .card-prompt:hover { border-color:var(--accent); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>⚡ PromptForge Unified Pro</h1>
+  <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">🌓 Тема</button>
+</header>
+
+<nav class="nav-desktop" id="navDesktop" role="tablist" aria-label="Основные разделы"></nav>
+<div class="nav-mobile" id="navMobile"></div>
+
+<main id="mainContent"></main>
+
+<script>
+(function() {
+  // ==================== CONSTANTS ====================
+  const STORAGE_KEY = 'pf_unified_pro_v2';
+  const TABS = [
+    { id:'constructor', icon:'🔧', label:'Конструктор' },
+    { id:'library', icon:'📚', label:'Библиотека' },
+    { id:'pentaum', icon:'🔍', label:'Penta‑Um' },
+    { id:'stomagen', icon:'🦷', label:'StomaGen' },
+    { id:'saas', icon:'🚀', label:'SaaS‑мастер' },
+    { id:'mindmap', icon:'🗺️', label:'Граф' },
+    { id:'builder', icon:'📦', label:'Сборщик' },
+    { id:'summary', icon:'📊', label:'Сводка' },
+    { id:'guide', icon:'📖', label:'Обучение' },
+    { id:'workspace', icon:'💼', label:'Воркспейс' }
+  ];
+
+  // ==================== STATE MANAGER ====================
+  const AppState = {
+    data: {
+      theme: 'dark',
+      activeTab: 'constructor',
+      cRole:'', cTask:'', cContext:'', cConstraints:'', cExamples:'', cExtra:'',
+      cFormat:'text', cTemp:1, cTopP:0.9, cMaxTok:2048, cTechniques:[],
+      myPrompts: [],
+      libCat: 'universal',
+      saasChecklist: Array(12).fill(false),
+      saasRoadmap: Array(4).fill(0),
+      saasCac:'', saasLtv:'', saasChurn:'', saasConv:'',
+      proj: { name:'', client:'', desc:'', goals:'', tools:'', deadline:'', budget:'', context:'', format:'Документация', notes:'' },
+      wsNotes:'', wsFileContent:'',
+      pentaInput:'', pentaScore:0,
+      summaryRecs:[]
+    },
+    listeners: {},
+    on(key, cb) { if(!this.listeners[key]) this.listeners[key]=[]; this.listeners[key].push(cb); },
+    set(key, value) {
+      this.data[key] = value;
+      if(this.listeners[key]) this.listeners[key].forEach(cb=>cb(value));
+      this.debouncedSave();
+    },
+    get(key) { return this.data[key]; },
+    debouncedSave: (function() { let t; return function() { clearTimeout(t); t = setTimeout(()=>AppState.persist(),300); }; })(),
+    persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch(e) { if(e.name==='QuotaExceededError') showMessage('msgCopy','Локальное хранилище переполнено','err'); } },
+    load() {
+      try { const r=localStorage.getItem(STORAGE_KEY); if(r){ const p=JSON.parse(r); this.data={...this.data,...p}; } } catch(e) {}
+    },
+    bindElement(id, stateKey, event='input', transform=null) {
+      const el = document.getElementById(id);
+      if(!el) return;
+      // set initial value
+      let val = this.data[stateKey];
+      if(el.type==='checkbox') el.checked = !!val;
+      else el.value = val !== undefined ? val : '';
+      el.addEventListener(event, () => {
+        let v = el.value;
+        if(el.type==='checkbox') v = el.checked;
+        else if(el.type==='range') v = parseFloat(v);
+        if(transform) v = transform(v);
+        this.set(stateKey, v);
+      });
+    }
+  };
+  AppState.load();
+  if(AppState.data.theme==='light') document.body.classList.add('light-theme');
+
+  // ==================== UI HELPERS ====================
+  function showMessage(id, text, cls='info', duration=3000) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = text; el.className = `inline-msg show ${cls}`;
+    setTimeout(()=>{ el.className = 'inline-msg'; }, duration);
+  }
+  function escapeHTML(str) { const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+  function estimateTokens(text) {
+    if(!text) return 0;
+    let tokens=0;
+    for(let c of text) { tokens += c.charCodeAt(0)>127 ? 0.4 : 0.25; }
+    return Math.ceil(tokens);
+  }
+
+  // ==================== BUILD UI ====================
+  function renderTabs() {
+    const desktop = document.getElementById('navDesktop');
+    const mobile = document.getElementById('navMobile');
+    desktop.innerHTML = TABS.map(t=>`<button class="tab-btn${AppState.data.activeTab===t.id?' active':''}" data-tab="${t.id}" role="tab" aria-selected="${AppState.data.activeTab===t.id}" aria-controls="panel-${t.id}">${t.icon} ${t.label}</button>`).join('');
+    mobile.innerHTML = `<select id="mobileTabSelect" aria-label="Выбор раздела">${TABS.map(t=>`<option value="${t.id}" ${AppState.data.activeTab===t.id?'selected':''}>${t.icon} ${t.label}</option>`).join('')}</select>`;
+    document.getElementById('mobileTabSelect').addEventListener('change', function() { switchTab(this.value); });
+  }
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+    const target = document.getElementById('panel-'+tabId);
+    if(target) target.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('active'); if(b.dataset.tab===tabId) b.classList.add('active'); });
+    const mob = document.getElementById('mobileTabSelect'); if(mob) mob.value=tabId;
+    AppState.set('activeTab', tabId);
+    if(tabId==='mindmap') renderMindmap();
+    if(tabId==='summary') updateSummary();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  renderTabs();
+  document.getElementById('navDesktop').addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn'); if(btn) switchTab(btn.dataset.tab);
+  });
+
+  // ==================== SECTIONS HTML ====================
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="tab-content active" id="panel-constructor">
+      <div class="row">
+        <div class="card" style="flex:2"><h3>🧩 Конструктор промптов</h3>
+          <div class="row"><div><label for="cRole">Роль</label><input id="cRole"></div><div><label for="cTask">Задача</label><input id="cTask"></div></div>
+          <label for="cContext">Контекст</label><textarea id="cContext" rows="2"></textarea>
+          <div class="row"><div><label for="cConstraints">Ограничения</label><input id="cConstraints"></div><div><label for="cExamples">Примеры</label><input id="cExamples"></div></div>
+          <label for="cExtra">Доп. инструкции</label><input id="cExtra">
+          <div class="row">
+            <div><label for="cFormat">Формат вывода</label><select id="cFormat"><option value="text">Plain Text</option><option value="json">JSON</option><option value="markdown">Markdown</option></select></div>
+            <div><label>Температура <span id="tempVal">1.00</span></label><input type="range" id="cTemp" min="0" max="2" step="0.01" value="1"></div>
+            <div><label>Top-P <span id="topPVal">0.90</span></label><input type="range" id="cTopP" min="0" max="1" step="0.01" value="0.9"></div>
+            <div><label>Max Tokens <span id="maxTokVal">2048</span></label><input type="range" id="cMaxTok" min="100" max="4096" step="1" value="2048"></div>
+          </div>
+          <label>Техники</label><div id="techniquesGrid" class="grid-4"></div>
+        </div>
+        <div class="card" style="flex:1.3">
+          <h3>👁️ Превью</h3><div class="preview-box" id="previewBox"></div>
+          <div>≈ <span id="tokenEst">0</span> токенов</div>
+          <button class="btn primary" id="btnCopyPrompt">📋 Копировать</button>
+          <button class="btn danger" id="btnClearPrompt">🗑️ Очистить</button>
+          <div class="inline-msg" id="msgCopy"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Остальные панели будут вставлены ниже -->
+  `;
+  // Добавляем остальные панели
+  const otherPanels = `
+    <div class="tab-content" id="panel-library"><div class="card"><h3>📚 Библиотека промптов</h3>
+      <div class="row" id="libCatBtns"><button class="btn active" data-libcat="universal">Универсальные</button><button class="btn" data-libcat="freelance">Фриланс</button><button class="btn" data-libcat="projects">Проекты</button><button class="btn" data-libcat="my">Моя библиотека</button></div>
+      <div class="grid-3" id="libGrid"></div>
+      <div id="myLibSection" style="display:none"><h4>Моя библиотека</h4>
+        <button class="btn primary" id="btnAddMyPrompt">➕ Добавить</button>
+        <button class="btn" id="btnMergePrompts">🔗 Сшить выбранные</button>
+        <button class="btn" id="btnExportLib">📤 Экспорт</button>
+        <button class="btn" id="btnImportLib">📥 Импорт</button><input type="file" id="importLibFile" accept=".json" style="display:none">
+        <div class="grid-3" id="myLibGrid"></div>
+      </div>
+      <div class="inline-msg" id="msgLib"></div>
+      <div class="card" id="editMyPromptCard" style="display:none"><h4>✏️ Редактировать промпт</h4>
+        <div class="row"><div><label>Название</label><input id="editMyName"></div><div><label>Роль</label><input id="editMyRole"></div></div>
+        <label>Описание</label><input id="editMyDesc"><label>Полный текст</label><textarea id="editMyFull" rows="4"></textarea>
+        <button class="btn success" id="btnSaveMyPrompt">💾 Сохранить</button><button class="btn" id="btnCancelEdit">Отмена</button>
+      </div>
+    </div></div>
+    <div class="tab-content" id="panel-pentaum"><div class="card"><h3>🔍 Penta‑Um анализатор планов</h3><textarea id="pentaInput" rows="6" placeholder="Введите долгосрочный план..."></textarea>
+    <button class="btn primary" id="btnPentaAnalyze">🔬 Анализировать</button><div id="pentaResult"></div><div class="inline-msg" id="msgPenta"></div></div></div>
+    <div class="tab-content" id="panel-stomagen"><div class="card"><h3>🦷 StomaGen — генератор цепочек промптов</h3>
+      <div class="row"><div><label>Специализация</label><select id="sgSpec"><option>Терапия</option><option>Ортопедия</option><option>Ортодонтия</option><option>Хирургия</option></select></div>
+      <div><label>Роль</label><select id="sgRole"><option>Врач-стоматолог</option><option>Ассистент</option></select></div>
+      <div><label>Тон</label><select id="sgTone"><option>Профессиональный</option><option>Дружелюбный</option></select></div>
+      <div><label>Формат</label><select id="sgFormat"><option>Инструкция</option><option>Скрипт разговора</option></select></div></div>
+      <div class="row"><div><label>KPI</label><input id="sgKpi" placeholder="через запятую"></div><div><label>Стоп-фразы</label><input id="sgStop" placeholder="через запятую"></div></div>
+      <button class="btn primary" id="btnStomaGen">🦷 Сгенерировать</button><div id="stomaResults"></div></div></div>
+    <div class="tab-content" id="panel-saas"><div class="card"><h3>🚀 SaaS‑мастер</h3>
+      <h4>Чек-лист зрелости (12 пунктов)</h4><div class="grid-3" id="saasChecklistGrid"></div>
+      <div class="progress-bar"><div class="progress-fill" id="saasCheckBar"></div></div><span>Прогресс: <span id="saasCheckPct">0</span>%</span>
+      <h4>Дорожная карта (4 этапа)</h4><div id="saasRoadmapGrid"></div>
+      <div class="progress-bar"><div class="progress-fill" id="saasRoadBar"></div></div><span>Прогресс: <span id="saasRoadPct">0</span>%</span>
+      <h4>Генератор промптов SaaS</h4><div class="row"><div><label>Категория</label><select id="saasCat"><option>Контент</option><option>Email</option><option>Реклама</option><option>SQL-запросы</option><option>Анализ оттока</option></select></div><div><label>Тема</label><input id="saasTopic"></div></div>
+      <button class="btn primary" id="btnSaasGen">⚡ Сгенерировать</button><div class="preview-box" id="saasGenOut" style="margin-top:6px;max-height:120px;"></div>
+      <h4>Метрики</h4><div class="row"><div><label>CAC ($)</label><input type="number" id="saasCac" step="0.01"></div><div><label>LTV ($)</label><input type="number" id="saasLtv" step="0.01"></div><div><label>Churn (%)</label><input type="number" id="saasChurn" step="0.01"></div><div><label>Конверсия (%)</label><input type="number" id="saasConv" step="0.01"></div></div>
+      <button class="btn primary" id="btnReAct">🧠 ReAct‑советник</button><div id="reactResult"></div>
+      <button class="btn" id="btnRandomIdea">💡 Случайная идея</button><div class="preview-box" id="randomIdeaOut" style="margin-top:6px;max-height:80px;"></div>
+      <h4>Анализатор отзывов</h4><textarea id="saasReviews" rows="3"></textarea><button class="btn" id="btnAnalyzeReviews">📊 Анализировать</button><div class="preview-box" id="reviewsOut" style="margin-top:6px;max-height:150px;"></div>
+    </div></div>
+    <div class="tab-content" id="panel-mindmap"><div class="card"><h3>🗺️ Интерактивная карта</h3><svg class="mindmap-svg" id="mindmapSvg" viewBox="0 0 1000 500"></svg></div></div>
+    <div class="tab-content" id="panel-builder"><div class="card"><h3>📦 Сборщик проекта</h3>
+      <div class="row"><div><label>Название</label><input id="projName"></div><div><label>Клиент</label><input id="projClient"></div></div>
+      <label>Описание</label><textarea id="projDesc" rows="2"></textarea>
+      <div class="row"><div><label>Цели</label><input id="projGoals"></div><div><label>Инструменты</label><input id="projTools"></div></div>
+      <div class="row"><div><label>Сроки</label><input id="projDeadline"></div><div><label>Бюджет</label><input id="projBudget"></div></div>
+      <label>Контекст</label><input id="projContext">
+      <div class="row"><div><label>Формат</label><select id="projFormat"><option>Документация</option><option>Код</option></select></div><div><label>Заметки</label><input id="projNotes"></div></div>
+      <button class="btn success" id="btnSaveProj">💾 Сохранить JSON</button>
+      <button class="btn" id="btnLoadProj">📂 Загрузить JSON</button><input type="file" id="projFileInput" accept=".json" style="display:none">
+      <button class="btn danger" id="btnClearProj">🗑️ Очистить</button>
+      <button class="btn primary" id="btnProjToConstructor">→ В Конструктор</button>
+      <div class="inline-msg" id="msgProj"></div>
+    </div></div>
+    <div class="tab-content" id="panel-summary"><div class="card"><h3>📊 Сводка</h3>
+      <div class="grid-3"><div class="metric-card"><div class="val" id="sumMaturity">0</div><div class="lbl">Индекс зрелости</div></div><div class="metric-card"><div class="val" id="sumHealth">0</div><div class="lbl">Здоровье SaaS</div></div><div class="metric-card"><div class="val" id="sumPenta">0</div><div class="lbl">Penta‑Um</div></div></div>
+      <div class="progress-bar"><div class="progress-fill" id="sumBar"></div></div>
+      <h4>Рекомендации</h4><div id="sumRecommendations"></div>
+    </div></div>
+    <div class="tab-content" id="panel-guide"><div class="card"><h3>📖 Руководство</h3><ol><li>Конструктор — соберите промпт</li><li>Библиотека — используйте шаблоны</li><li>Penta‑Um — проанализируйте план</li><li>StomaGen — стоматологические промпты</li><li>SaaS‑мастер — метрики и чек-лист</li></ol><button class="btn" id="btnCopyTemplate">📋 Копировать шаблон промпта</button><div class="inline-msg" id="msgGuide"></div></div></div>
+    <div class="tab-content" id="panel-workspace"><div class="card"><h3>💼 Воркспейс</h3><label>Заметки</label><textarea id="wsNotes" rows="5"></textarea>
+    <button class="btn primary" id="btnWsToConstructor">→ В Конструктор</button><button class="btn" id="btnWsClear">🗑️ Очистить</button>
+    <label>Загрузка файла</label><input type="file" id="wsFile" accept=".txt,.md,.json,.csv"><div class="preview-box" id="wsFileContent"></div><div class="inline-msg" id="msgWs"></div></div></div>
+  `;
+  main.insertAdjacentHTML('beforeend', otherPanels);
+
+  // ==================== INIT BINDINGS ====================
+  // Constructor
+  const techniquesList = ['zero-shot','few-shot','cot','self-refine','role-based','template','reflection','dspy'];
+  document.getElementById('techniquesGrid').innerHTML = techniquesList.map(t=>`<span class="chip${AppState.data.cTechniques.includes(t)?' checked':''}" data-tech="${t}" tabindex="0" role="checkbox" aria-checked="${AppState.data.cTechniques.includes(t)}">${t}</span>`).join('');
+  function updatePreview() {
+    const parts = [];
+    const d = AppState.data;
+    if(d.cRole) parts.push(`**Роль:** ${d.cRole}`);
+    if(d.cTask) parts.push(`**Задача:** ${d.cTask}`);
+    if(d.cContext) parts.push(`**Контекст:** ${d.cContext}`);
+    if(d.cConstraints) parts.push(`**Ограничения:** ${d.cConstraints}`);
+    if(d.cExamples) parts.push(`**Примеры:** ${d.cExamples}`);
+    if(d.cExtra) parts.push(`**Доп. инструкции:** ${d.cExtra}`);
+    if(d.cTechniques.length) parts.push(`**Техники:** ${d.cTechniques.join(', ')}`);
+    parts.push(`**Формат:** ${d.cFormat}  |  temp=${d.cTemp} top_p=${d.cTopP} max_tokens=${d.cMaxTok}`);
+    document.getElementById('previewBox').textContent = parts.join('\n\n') || 'Начните заполнять поля...';
+    document.getElementById('tokenEst').textContent = estimateTokens(parts.join(' '));
+  }
+  ['cRole','cTask','cContext','cConstraints','cExamples','cExtra','cFormat'].forEach(k=> AppState.bindElement(k,k,'input'));
+  AppState.bindElement('cTemp','cTemp','input',parseFloat);
+  AppState.bindElement('cTopP','cTopP','input',parseFloat);
+  AppState.bindElement('cMaxTok','cMaxTok','input',parseInt);
+  AppState.on('cTemp', v=> document.getElementById('tempVal').textContent=v.toFixed(2));
+  AppState.on('cTopP', v=> document.getElementById('topPVal').textContent=v.toFixed(2));
+  AppState.on('cMaxTok', v=> document.getElementById('maxTokVal').textContent=v);
+  ['cRole','cTask','cContext','cConstraints','cExamples','cExtra','cFormat','cTemp','cTopP','cMaxTok'].forEach(k=> AppState.on(k, updatePreview));
+  AppState.on('cTechniques', (techs)=>{ updatePreview(); document.querySelectorAll('#techniquesGrid .chip').forEach(ch=>ch.classList.toggle('checked', techs.includes(ch.dataset.tech))); });
+  document.getElementById('techniquesGrid').addEventListener('click', e=>{
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    const tech = chip.dataset.tech;
+    const arr = AppState.data.cTechniques.slice();
+    const idx = arr.indexOf(tech);
+    if(idx>-1) arr.splice(idx,1); else arr.push(tech);
+    AppState.set('cTechniques', arr);
+  });
+  document.getElementById('btnCopyPrompt').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(document.getElementById('previewBox').textContent).then(()=>showMessage('msgCopy','✅ Скопировано','ok'));
+  });
+  document.getElementById('btnClearPrompt').addEventListener('click', ()=>{
+    ['cRole','cTask','cContext','cConstraints','cExamples','cExtra'].forEach(k=> AppState.set(k,''));
+    AppState.set('cFormat','text'); AppState.set('cTemp',1); AppState.set('cTopP',0.9); AppState.set('cMaxTok',2048); AppState.set('cTechniques',[]);
+    updatePreview(); showMessage('msgCopy','🗑️ Очищено','info');
+  });
+  updatePreview();
+
+  // Library
+  const defaultLib = {
+    universal: [{ name:'Универсальный помощник', role:'AI-ассистент', desc:'Общий промпт', full:'Ты — универсальный помощник. Отвечай точно.' }],
+    freelance: [{ name:'Отклик фрилансера', role:'Копирайтер', desc:'Шаблон отклика', full:'Составь persuasive отклик на заказ.' }],
+    projects: [{ name:'План проекта', role:'Project Manager', desc:'Структура плана', full:'Разработай план проекта с этапами.' }]
+  };
+  function renderLibrary(cat) {
+    const grid = document.getElementById('libGrid');
+    const mySection = document.getElementById('myLibSection');
+    if(cat==='my'){
+      mySection.style.display='block'; grid.innerHTML=''; renderMyLib();
+    } else {
+      mySection.style.display='none';
+      const prompts = defaultLib[cat]||[];
+      grid.innerHTML = prompts.map((p,i)=>`<div class="card-prompt" data-cat="${cat}" data-idx="${i}"><div class="title">${escapeHTML(p.name)}</div><div class="role-desc">${escapeHTML(p.role)} — ${escapeHTML(p.desc)}</div></div>`).join('');
+      grid.querySelectorAll('.card-prompt').forEach(c=>c.addEventListener('click',()=>{
+        const p=defaultLib[c.dataset.cat][c.dataset.idx];
+        AppState.set('cRole',p.role); AppState.set('cTask',p.name); AppState.set('cContext',p.desc); AppState.set('cExtra',p.full);
+        updatePreview(); switchTab('constructor'); showMessage('msgLib','✅ Загружено в конструктор','ok');
+      }));
+    }
+  }
+  function renderMyLib(){
+    const grid = document.getElementById('myLibGrid');
+    grid.innerHTML = AppState.data.myPrompts.map((p,i)=>`<div class="card-prompt"><input type="checkbox" class="my-chk" data-idx="${i}"><div class="title" data-action="load" data-idx="${i}">${escapeHTML(p.name)}</div><div class="role-desc">${escapeHTML(p.role)}</div><button class="btn small" data-action="edit" data-idx="${i}">✏️</button><button class="btn small danger" data-action="del" data-idx="${i}">🗑️</button></div>`).join('')||'Нет промптов';
+    grid.querySelectorAll('[data-action="load"]').forEach(el=>el.addEventListener('click',()=>{
+      const p=AppState.data.myPrompts[el.dataset.idx];
+      AppState.set('cRole',p.role); AppState.set('cTask',p.name); AppState.set('cContext',p.desc); AppState.set('cExtra',p.full);
+      updatePreview(); switchTab('constructor');
+    }));
+    grid.querySelectorAll('[data-action="edit"]').forEach(el=>el.addEventListener('click',()=>editMyPrompt(parseInt(el.dataset.idx))));
+    grid.querySelectorAll('[data-action="del"]').forEach(el=>el.addEventListener('click',()=>{
+      const idx=parseInt(el.dataset.idx); AppState.data.myPrompts.splice(idx,1); AppState.set('myPrompts', AppState.data.myPrompts); renderLibrary('my');
+    }));
+  }
+  function editMyPrompt(idx=-1){
+    const card=document.getElementById('editMyPromptCard'); card.style.display='block'; card.dataset.editIdx=idx;
+    if(idx>=0 && AppState.data.myPrompts[idx]){
+      const p=AppState.data.myPrompts[idx];
+      document.getElementById('editMyName').value=p.name; document.getElementById('editMyRole').value=p.role; document.getElementById('editMyDesc').value=p.desc; document.getElementById('editMyFull').value=p.full;
+    } else { document.getElementById('editMyName').value=''; document.getElementById('editMyRole').value=''; document.getElementById('editMyDesc').value=''; document.getElementById('editMyFull').value=''; card.dataset.editIdx='-1'; }
+  }
+  document.getElementById('btnSaveMyPrompt').addEventListener('click',()=>{
+    const idx=parseInt(document.getElementById('editMyPromptCard').dataset.editIdx);
+    const p={ name:document.getElementById('editMyName').value.trim(), role:document.getElementById('editMyRole').value.trim(), desc:document.getElementById('editMyDesc').value.trim(), full:document.getElementById('editMyFull').value.trim() };
+    if(!p.name){ showMessage('msgLib','Название обязательно','err'); return; }
+    if(idx>=0 && AppState.data.myPrompts[idx]) AppState.data.myPrompts[idx]=p; else AppState.data.myPrompts.push(p);
+    AppState.set('myPrompts', AppState.data.myPrompts); document.getElementById('editMyPromptCard').style.display='none'; renderLibrary('my');
+  });
+  document.getElementById('btnCancelEdit').addEventListener('click',()=>document.getElementById('editMyPromptCard').style.display='none');
+  document.getElementById('btnAddMyPrompt').addEventListener('click',()=>editMyPrompt(-1));
+  document.getElementById('btnMergePrompts').addEventListener('click',()=>{
+    const checks=document.querySelectorAll('#myLibGrid .my-chk:checked');
+    if(checks.length<2){ showMessage('msgLib','Выберите минимум 2','err'); return; }
+    const selected=Array.from(checks).map(c=>AppState.data.myPrompts[parseInt(c.dataset.idx)]);
+    const merged={ name:selected.map(p=>p.name).join(' + '), role:selected.map(p=>p.role).join(' | '), desc:'Сшитый', full:selected.map(p=>p.full).join('\n---\n') };
+    AppState.data.myPrompts.push(merged); AppState.set('myPrompts', AppState.data.myPrompts); renderLibrary('my'); showMessage('msgLib','✅ Сшито','ok');
+  });
+  document.getElementById('btnExportLib').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(AppState.data.myPrompts,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='my_prompts.json'; a.click();
+  });
+  document.getElementById('btnImportLib').addEventListener('click',()=>document.getElementById('importLibFile').click());
+  document.getElementById('importLibFile').addEventListener('change', function(){
+    const file=this.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        const data=JSON.parse(e.target.result);
+        if(!Array.isArray(data)) throw new Error('Не массив');
+        AppState.data.myPrompts = [...AppState.data.myPrompts, ...data];
+        AppState.set('myPrompts', AppState.data.myPrompts); renderLibrary('my'); showMessage('msgLib','📥 Импортировано','ok');
+      } catch(ex){ showMessage('msgLib','❌ Ошибка структуры файла','err'); }
+    };
+    reader.readAsText(file); this.value='';
+  });
+  document.querySelectorAll('#libCatBtns .btn').forEach(btn=>btn.addEventListener('click', function(){
+    document.querySelectorAll('#libCatBtns .btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');
+    AppState.set('libCat', this.dataset.libcat); renderLibrary(this.dataset.libcat);
+  }));
+  renderLibrary(AppState.data.libCat);
+
+  // PentaUm
+  const pentaCriteria = [
+    {name:'Этапы', keywords:['этап','фаза','milestone']},{name:'Команда', keywords:['команда','сотрудник']},
+    {name:'Автоматизация', keywords:['автоматизаци','API','воркфлоу']},{name:'Метрики', keywords:['KPI','метрика']},
+    {name:'Этика', keywords:['этик','GDPR','конфиденциальн']},{name:'Инструменты', keywords:['инструмент','фреймворк']},
+    {name:'Hardware', keywords:['железо','сервер','GPU']},{name:'Карта компетенций', keywords:['компетенци','навык','скилл']},
+    {name:'Адаптивность', keywords:['адаптивн','agile','scrum']},{name:'Валидация', keywords:['валидаци','тестирован','QA']}
+  ];
+  document.getElementById('btnPentaAnalyze').addEventListener('click',()=>{
+    const text=document.getElementById('pentaInput').value.toLowerCase();
+    if(!text.trim()){ showMessage('msgPenta','Введите текст','err'); return; }
+    const results=pentaCriteria.map(c=>({name:c.name, found:c.keywords.some(kw=>text.includes(kw))}));
+    const found=results.filter(r=>r.found).length;
+    let score=(found/10)*5;
+    if(!results.find(r=>r.name==='Карта компетенций').found) score-=0.5;
+    if(!results.find(r=>r.name==='Адаптивность').found) score-=0.3;
+    score=Math.max(0.5, Math.min(5, Math.round(score*10)/10));
+    AppState.set('pentaScore', score);
+    const missing=results.filter(r=>!r.found).map(r=>r.name);
+    document.getElementById('pentaResult').innerHTML=`<div class="card"><h4>Результат</h4><p>Оценка: ${score}/5 — ${score>=4?'🟢 Высокая':score>=2.5?'🟡 Средняя':'🔴 Низкая'}</p><p>Найдено критериев: ${found}/10</p><p>Отсутствуют: ${missing.join(', ')||'—'}</p></div>`;
+    showMessage('msgPenta','✅ Анализ завершён','ok');
+  });
+  AppState.bindElement('pentaInput','pentaInput','input');
+
+  // StomaGen
+  document.getElementById('btnStomaGen').addEventListener('click',()=>{
+    const spec=document.getElementById('sgSpec').value, role=document.getElementById('sgRole').value, tone=document.getElementById('sgTone').value, format=document.getElementById('sgFormat').value;
+    const kpi=document.getElementById('sgKpi').value, stop=document.getElementById('sgStop').value;
+    const base=`Ты — ${role} в стоматологии (${spec}).`;
+    const variants=[
+      `**Общий:**\n${base}\nСоставь ${format} в ${tone} тоне. KPI: ${kpi||'нет'}. Стоп-фразы: ${stop||'нет'}.`,
+      `**Уточнённый:**\n${base}\nДетальный ${format} с шагами, ${tone} стиль.`,
+      `**Финальный:**\n${base}\nИтоговый ${format} премиум-качества, интегрируй KPI: ${kpi}, избегай: ${stop}.`
+    ];
+    const container=document.getElementById('stomaResults');
+    container.innerHTML=variants.map(v=>`<div class="card"><div class="preview-box">${escapeHTML(v)}</div><button class="btn small copy-stoma">📋</button></div>`).join('');
+    container.querySelectorAll('.copy-stoma').forEach(b=>b.addEventListener('click', function(){
+      navigator.clipboard.writeText(this.parentElement.querySelector('.preview-box').textContent).then(()=>showMessage('msgCopy','Скопировано','ok'));
+    }));
+    const mdBtn=document.createElement('button'); mdBtn.className='btn small'; mdBtn.textContent='📄 Экспорт MD'; mdBtn.addEventListener('click',()=>{
+      const blob=new Blob([variants.join('\n\n---\n\n')],{type:'text/markdown'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='stomagen.md'; a.click();
+    });
+    container.appendChild(mdBtn);
+  });
+
+  // SaaS мастер
+  const saasCheckItems=['Целевая аудитория','MVP запущен','Платящие клиенты','Аналитика','Онбординг','Биллинг','Документация','Мониторинг','Бэкапы','Безопасность','Обратная связь','Обновления'];
+  function renderChecklist(){
+    const grid=document.getElementById('saasChecklistGrid');
+    grid.innerHTML=saasCheckItems.map((item,i)=>`<label><input type="checkbox" class="saas-chk" data-idx="${i}" ${AppState.data.saasChecklist[i]?'checked':''}> ${item}</label>`).join('');
+    grid.querySelectorAll('.saas-chk').forEach(chk=>chk.addEventListener('change', function(){
+      AppState.data.saasChecklist[this.dataset.idx]=this.checked; AppState.set('saasChecklist', AppState.data.saasChecklist);
+      updateSaasProgress();
+    }));
+    updateSaasProgress();
+  }
+  function updateSaasProgress(){
+    const done=AppState.data.saasChecklist.filter(Boolean).length;
+    document.getElementById('saasCheckBar').style.width=(done/12*100)+'%';
+    document.getElementById('saasCheckPct').textContent=Math.round(done/12*100);
+  }
+  const roadmapStages=[{name:'Исследование', tasks:['Анализ рынка','CustDev']},{name:'MVP', tasks:['Прототип','Тестирование']},{name:'Рост', tasks:['Маркетинг','Масштабирование']},{name:'Зрелость', tasks:['Оптимизация','Экспансия']}];
+  function renderRoadmap(){
+    const grid=document.getElementById('saasRoadmapGrid');
+    grid.innerHTML=roadmapStages.map((s,si)=>`<div class="card"><h4>${s.name}</h4>${s.tasks.map((t,ti)=>`<label><input type="checkbox" class="road-chk" data-si="${si}" data-ti="${ti}" ${(AppState.data.saasRoadmap[si]&(1<<ti))?'checked':''}> ${t}</label>`).join('')}</div>`).join('');
+    grid.querySelectorAll('.road-chk').forEach(chk=>chk.addEventListener('change', function(){
+      const si=this.dataset.si, ti=this.dataset.ti;
+      if(this.checked) AppState.data.saasRoadmap[si]|=(1<<ti); else AppState.data.saasRoadmap[si]&=~(1<<ti);
+      AppState.set('saasRoadmap', AppState.data.saasRoadmap); updateRoadProgress();
+    }));
+    updateRoadProgress();
+  }
+  function updateRoadProgress(){
+    let total=0,done=0;
+    roadmapStages.forEach((s,si)=>{ total+=s.tasks.length; for(let ti=0;ti<s.tasks.length;ti++) if(AppState.data.saasRoadmap[si]&(1<<ti)) done++; });
+    document.getElementById('saasRoadBar').style.width=(done/total*100)+'%';
+    document.getElementById('saasRoadPct').textContent=Math.round(done/total*100);
+  }
+  renderChecklist(); renderRoadmap();
+  document.getElementById('btnSaasGen').addEventListener('click',()=>{
+    const cat=document.getElementById('saasCat').value, topic=document.getElementById('saasTopic').value||'продукт';
+    const tpl={Контент:`Создай контент-план для "${topic}"`,Email:`Цепочка писем для onboarding "${topic}"`,Реклама:`Рекламное объявление для "${topic}"`,'SQL-запросы':`SQL-запрос для анализа ${topic}`, 'Анализ оттока':`Анализ оттока для "${topic}"`};
+    document.getElementById('saasGenOut').textContent=tpl[cat]||'';
+  });
+  document.getElementById('btnReAct').addEventListener('click',()=>{
+    const cac=parseFloat(document.getElementById('saasCac').value)||0, ltv=parseFloat(document.getElementById('saasLtv').value)||0, churn=parseFloat(document.getElementById('saasChurn').value)||0, conv=parseFloat(document.getElementById('saasConv').value)||0;
+    AppState.set('saasCac',cac); AppState.set('saasLtv',ltv); AppState.set('saasChurn',churn); AppState.set('saasConv',conv);
+    const ratio=ltv/cac||0, health=Math.min(100,Math.max(10,Math.round(ratio*33+(100-churn*3)+conv*2)));
+    document.getElementById('reactResult').innerHTML=`<div class="card"><svg width="120" height="120"><circle cx="60" cy="60" r="50" stroke="var(--surface2)" stroke-width="12" fill="none"/><circle cx="60" cy="60" r="50" stroke="var(--accent)" stroke-width="12" fill="none" stroke-dasharray="${(health/100)*2*Math.PI*50} ${2*Math.PI*50}" transform="rotate(-90 60 60)"/><text x="60" y="56" text-anchor="middle" fill="var(--text)" font-size="18">${health}%</text></svg><p>LTV/CAC: ${ratio.toFixed(2)} | Churn: ${churn}%</p></div>`;
+    AppState.set('summaryRecs', [ratio<1.5?'Увеличьте LTV или снизьте CAC':'Хорошее соотношение', churn>5?'Работайте над удержанием':'Отток низкий']);
+  });
+  document.getElementById('btnRandomIdea').addEventListener('click',()=>{
+    const ideas=['SaaS для автоматизации отчётности','AI-консультант по материалам','Платформа обмена промптами','Анализ конкурентов через парсинг'];
+    document.getElementById('randomIdeaOut').textContent='💡 '+ideas[Math.floor(Math.random()*ideas.length)];
+  });
+  document.getElementById('btnAnalyzeReviews').addEventListener('click',()=>{
+    const text=document.getElementById('saasReviews').value;
+    const patterns=[];
+    if(text.match(/баг|ошибк/)) patterns.push('Технические проблемы');
+    if(text.match(/медлен|тормоз/)) patterns.push('Производительность');
+    document.getElementById('reviewsOut').textContent=patterns.length?patterns.join(', '):'Паттерны не найдены';
+  });
+
+  // Mindmap
+  function renderMindmap(){
+    const svg=document.getElementById('mindmapSvg');
+    const nodes=[{id:'constructor',label:'Конструктор',x:500,y:250,r:28,color:'#6c8cff'},{id:'library',label:'Библиотека',x:320,y:100,r:22,color:'#4ef0c8'},{id:'pentaum',label:'Penta-Um',x:680,y:100,r:22,color:'#ffb347'},{id:'stomagen',label:'StomaGen',x:200,y:250,r:22,color:'#ff5e7a'},{id:'saas',label:'SaaS',x:800,y:250,r:22,color:'#4ade80'},{id:'builder',label:'Сборщик',x:320,y:400,r:22,color:'#a78bfa'},{id:'summary',label:'Сводка',x:680,y:400,r:22,color:'#f472b6'},{id:'guide',label:'Обучение',x:420,y:60,r:18,color:'#94a3b8'},{id:'workspace',label:'Воркспейс',x:580,y:440,r:18,color:'#60a5fa'}];
+    const isLight=document.body.classList.contains('light-theme');
+    const lineColor=isLight?'#c5c7d4':'#444560';
+    let html='';
+    nodes.forEach(n=>{ if(n.id!=='constructor') html+=`<line x1="500" y1="250" x2="${n.x}" y2="${n.y}" stroke="${lineColor}" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>`; });
+    nodes.forEach(n=>{ html+=`<circle class="node" cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${n.color}" opacity="0.85" data-tab="${n.id}" cursor="pointer"/><text x="${n.x}" y="${n.y+4}" text-anchor="middle" fill="#fff" font-size="11">${n.label}</text>`; });
+    svg.innerHTML=html;
+    svg.querySelectorAll('circle.node').forEach(c=>c.addEventListener('click',()=>switchTab(c.dataset.tab)));
+  }
+  renderMindmap();
+
+  // Builder
+  ['projName','projClient','projDesc','projGoals','projTools','projDeadline','projBudget','projContext','projFormat','projNotes'].forEach(k=> AppState.bindElement(k, `proj.${k}`));
+  document.getElementById('btnSaveProj').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(AppState.data.proj,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='project.json'; a.click();
+    showMessage('msgProj','✅ Сохранено','ok');
+  });
+  document.getElementById('btnLoadProj').addEventListener('click',()=>document.getElementById('projFileInput').click());
+  document.getElementById('projFileInput').addEventListener('change', function(){
+    const file=this.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(e){ try{
+      const data=JSON.parse(e.target.result); AppState.data.proj={...AppState.data.proj,...data}; AppState.set('proj', AppState.data.proj);
+      Object.keys(AppState.data.proj).forEach(k=>{ const el=document.getElementById(k==='format'?'projFormat':'proj'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.value=AppState.data.proj[k]; });
+      showMessage('msgProj','📂 Загружено','ok');
+    } catch{ showMessage('msgProj','❌ Ошибка JSON','err'); }};
+    reader.readAsText(file); this.value='';
+  });
+  document.getElementById('btnClearProj').addEventListener('click',()=>{
+    AppState.data.proj={ name:'', client:'', desc:'', goals:'', tools:'', deadline:'', budget:'', context:'', format:'Документация', notes:'' };
+    AppState.set('proj', AppState.data.proj); Object.keys(AppState.data.proj).forEach(k=>{ const el=document.getElementById(k==='format'?'projFormat':'proj'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.value=AppState.data.proj[k]; });
+  });
+  document.getElementById('btnProjToConstructor').addEventListener('click',()=>{
+    AppState.set('cRole', AppState.data.proj.name||'Специалист'); AppState.set('cTask', AppState.data.proj.goals||AppState.data.proj.desc);
+    AppState.set('cContext', AppState.data.proj.context); AppState.set('cExtra', AppState.data.proj.notes);
+    updatePreview(); switchTab('constructor');
+  });
+
+  // Summary
+  function updateSummary(){
+    const checkPct=Math.round(AppState.data.saasChecklist.filter(Boolean).length/12*100);
+    let totalRoad=0,doneRoad=0; roadmapStages.forEach((s,si)=>{ totalRoad+=s.tasks.length; for(let ti=0;ti<s.tasks.length;ti++) if(AppState.data.saasRoadmap[si]&(1<<ti)) doneRoad++; });
+    const roadPct=Math.round(doneRoad/totalRoad*100);
+    const pentaScore=AppState.data.pentaScore||0;
+    const pentaPct=Math.round(pentaScore/5*100);
+    const cac=parseFloat(AppState.data.saasCac)||0, ltv=parseFloat(AppState.data.saasLtv)||0, ratio=cac?ltv/cac:0;
+    const healthPct=Math.min(100,Math.max(10,Math.round(ratio*33+(100-(parseFloat(AppState.data.saasChurn)||0)*3)+(parseFloat(AppState.data.saasConv)||0)*2)));
+    const maturity=Math.round((checkPct+roadPct+pentaPct+healthPct)/4);
+    document.getElementById('sumMaturity').textContent=maturity;
+    document.getElementById('sumHealth').textContent=healthPct;
+    document.getElementById('sumPenta').textContent=pentaScore;
+    document.getElementById('sumBar').style.width=maturity+'%';
+    const recs=[...AppState.data.summaryRecs];
+    if(checkPct<50) recs.push('Пройдите чек-лист SaaS');
+    if(roadPct<40) recs.push('Продвиньтесь по дорожной карте');
+    if(pentaScore<2.5) recs.push('Улучшите план (Penta‑Um)');
+    document.getElementById('sumRecommendations').innerHTML=recs.map(r=>'• '+r).join('<br>')||'Нет рекомендаций';
+  }
+  updateSummary();
+
+  // Guide
+  document.getElementById('btnCopyTemplate').addEventListener('click',()=>{
+    navigator.clipboard.writeText('Ты — эксперт в [область]. Задача: [описание]. Контекст: [контекст].').then(()=>showMessage('msgGuide','✅ Скопировано','ok'));
+  });
+
+  // Workspace
+  AppState.bindElement('wsNotes','wsNotes','input');
+  document.getElementById('wsFile').addEventListener('change', function(){
+    const file=this.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(e){ AppState.set('wsFileContent', e.target.result.substring(0,5000)); document.getElementById('wsFileContent').textContent=AppState.data.wsFileContent; };
+    reader.readAsText(file); this.value='';
+  });
+  document.getElementById('btnWsToConstructor').addEventListener('click',()=>{
+    AppState.set('cContext', (AppState.data.cContext+' '+AppState.data.wsNotes).trim());
+    if(AppState.data.wsFileContent) AppState.set('cExtra', (AppState.data.cExtra+' [Файл]: '+AppState.data.wsFileContent).trim());
+    updatePreview(); switchTab('constructor');
+  });
+  document.getElementById('btnWsClear').addEventListener('click',()=>{
+    AppState.set('wsNotes',''); AppState.set('wsFileContent',''); document.getElementById('wsFileContent').textContent='';
+  });
+
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click',()=>{
+    document.body.classList.toggle('light-theme');
+    AppState.set('theme', document.body.classList.contains('light-theme')?'light':'dark');
+    renderMindmap();
+  });
+
+  // Initial tab activation
+  switchTab(AppState.data.activeTab);
+})();
+</script>
+</body>
+</html>
